@@ -90,3 +90,103 @@ class FlightPlanConfig:
         "D1": "ADS-C (FANS 1/A)",
         "G1": "ADS-C (ATN)"
     }
+
+    # 13. DEPARTURE AERODROME (도착 비행장)
+    departure_aerodrome = {
+        "ZZZZ": "설정되지 않음 (추가 정보란에서 DEP로 명시함)",
+        "AFIL": "이 FPL이 비행 중 접수됨 (추가 정보란에서 DEP로 명시함)"
+    }
+
+    # 15-1. CRUISING SPEED (비행 속도)
+    # 단위와 이후 문자의 갯수를 포함한 Tuple로 나타냅니다.
+    cruising_speed = {
+        "K": ("km/h", 4),
+        "N": ("kt", 4),
+        "M": ("Mach", 3)
+    }
+
+    # 15-2. LEVELS (비행 고도)
+    # 단위와 이후 문자의 갯수를 포함한 Tuple로 나타냅니다.
+    level = {
+        "F": ("FL (100ft)", 3),
+        "S": ("m", 4),
+        "A": ("100ft", 3),
+        "M": ("10m", 4),
+        "VFR": ("명시하지 않음 (시계 비행)", 0)
+    }
+
+    @classmethod
+    def get_equips_and_capabilities(cls, token_str):
+        """
+        Item 10번에 있는 토큰 행렬을 파싱합니다.
+        """
+        ret = {
+            "equipments": list(),
+            "transponder": {
+                "code": str(),
+                "explain": str()
+            },
+            "ads": list()
+        }
+        token_split = token_str.split("/")
+        fpl_equip, fpl_capa = token_split[0], token_split[1]
+
+        # Equipments 문자열을 한 글자씩 분석하고 모든 문자열이 적용될 때까지 반복합니다.
+        cur = str()
+        for i in range(0, len(fpl_equip)):
+            cur += fpl_equip[i]
+            if cur in cls.equipments:
+                ret["equipments"].append({
+                    "code": cur,
+                    "explain": cls.equipments[cur]
+                })
+                cur = str()
+
+        # Transponder는 fpl_capa의 첫 문자입니다.
+        ret["transponder"]["code"] = fpl_capa[0]
+        ret["transponder"]["explain"] = cls.transponder_type[fpl_capa[0]]
+
+        # fpl_capa에서 첫 글자를 제거합니다.
+        fpl_capa = fpl_capa[1:]
+
+        # ADS Type은 무조건 2글자이므로, 2글자씩 읽어들여 분석합니다.
+        for i in range(0, len(fpl_capa), 2):
+            cur = fpl_capa[i:i + 2]
+            ret["ads"].append({
+                "code": cur,
+                "explain": cls.ads_type[cur]
+            })
+        
+        return ret
+    
+    @classmethod
+    def get_speed_and_level(cls, token_str):
+        """
+        Item 15번에 있는 토큰 행렬을 파싱합니다.
+        """
+        # 비행 속도의 단위와 값을 분석합니다.
+        ret_speed = {
+            "speed": int(),
+            "unit": str()
+        }
+        speed_unit = token_str[0]
+        speed_end_ind = cls.cruising_speed[speed_unit][1] + 1
+        ret_speed["unit"] = cls.cruising_speed[speed_unit][0]
+        ret_speed["speed"] = int(token_str[1:speed_end_ind])
+
+        # 비행 레벨의 단위와 값을 분석합니다.
+        ret_level = {
+            "level": int(),
+            "unit": str()
+        }
+        level_unit = token_str[speed_end_ind]
+
+        # 시계 비행 상황일 경우 Level 파싱을 건너뜁니다.
+        if level_unit == "V":
+            ret_level["unit"] = cls.level["VFR"]
+            ret_level["level"] = 0
+        else:
+            ret_level["unit"] = cls.level[level_unit][0]
+            ret_level["level"] = int(token_str[speed_end_ind + 1:])
+
+        return ret_speed, ret_level

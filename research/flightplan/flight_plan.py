@@ -43,6 +43,8 @@ class FlightPlan:
         # FPL을 검출합니다.
         fpl_str = fpl_json["records"][0]["amsOriginal"]
 
+        print("[+] 실제 FPL : \n\n", fpl_str, "\n\n[+] 파싱 결과 : \n")
+
         # 파싱한 FPL을 반환합니다.
         return cls.parse(fpl_str)
     
@@ -96,8 +98,26 @@ class FlightPlan:
         }
 
         # 10. EQUIPMENT AND CAPABILITIES (장착 장비와 기능성) 
-        pass
+        ret["equips_and_caps"] = FPC.get_equips_and_capabilities(fpl_items[4])
         
+        # 13. DEPARTURE AERODROME & PLANNED TIME (도착 비행장과 예정 시간)
+        fpl_departure = fpl_items[5][0:4]
+
+        # 만약 출발지 상황이 특수하다면 해당 설명을 넣습니다.
+        if fpl_departure not in FPC.departure_aerodrome:
+            ret["departure"] = fpl_departure
+        else:
+            ret["departure"] = FPC.departure_aerodrome[fpl_departure]
+
+        # TODO 조회 시간 기반으로 변경
+        ret["planned_time"] = fpl_items[5][4:6] + ":" + fpl_items[5][6:]
+
+        # 15. ROUTE WITH CRUISING SPEED AND LEVEL (비행 속도와 레벨, 경로)
+        fpl_route_split = fpl_items[6].split(" ")
+        fpl_speed_level, fpl_route = fpl_route_split[0], fpl_route_split[1]
+
+        ret["cruising_speed"], ret["level"] = FPC.get_speed_and_level(fpl_speed_level)
+
         return ret
 
 if __name__ == "__main__":
