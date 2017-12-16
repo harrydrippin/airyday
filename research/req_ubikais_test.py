@@ -6,20 +6,18 @@ rep = response.json()
 
 print("status : ", rep["status"],"\n\n")
 for i in rep["records"]:
-    print("편명 : ", i["fpId"])
-    print("등록번호 :", i["acId"])
-    print("기종 :", i["acType"])
-    print("출발공항 :", i["apIcao"])
-    print("출발예정시간 :", i["staDate"], i["schTime"])
-    print("출발시각 :", i["staDate"], i["sta"])
-    print("도착공항 :", i["apArr"])
-    print("예정도착시간 :", i["schDate"], i["eta"])
-    print("실제도착시간 :", i["schDate"], i["ata"])
-    print("램프/램프인 :", i["standArr"],"/", i["blockOnTime"])
-    print("현재상태 :", i["arrStatus"])
-    print("amsRecPk / flightPk :", i["amsRecPk"], i["flightPk"])
-    print("\n[FPL]\n")
-
+    FltNum =  "편명 : " + i["fpId"]
+    RegNum = "\n등록번호 : " + ("Not Assigned" if i["acId"] == None else i["acId"])
+    AcType = "\n기종 : " + i["acType"]
+    Orig = "\n출발공항 : " + i["apIcao"]
+    ActDep = "\n출발시각 : " + i["staDate"] + " " + i["sta"]
+    Dest = "\n도착공항 : " + i["apArr"]
+    EstArr = "\n도착시간 : " + i["schDate"] + " " + ("None" if i["eta"] == None else i["eta"])
+    Ramp = "\n램프/램프인 : " + ("Not Assigned" if i["standArr"] == None else i["standArr"]) + " / " + ("None" if i["blockOnTime"] == None else i["blockOnTime"])
+    Stat = "\n현재상태 : " +  ("None" if i["arrStatus"] == None else i["arrStatus"])
+    PriKey = "\namsRecPk / flightPk : " + str(i["amsRecPk"]) + " / " + str(i["flightPk"])
+    FplHead = "\n\n[FPL]\n"
+    
     aRP = {
     'aRP' : i["amsRecPk"],
     'dummy' : 'A182955307'
