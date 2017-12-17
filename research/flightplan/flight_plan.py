@@ -110,7 +110,7 @@ class FlightPlan:
             ret["departure"] = FPC.departure_aerodrome[fpl_departure]
 
         # TODO 조회 시간 기반으로 변경
-        ret["planned_time"] = fpl_items[5][4:6] + ":" + fpl_items[5][6:]
+        ret["departure_time"] = fpl_items[5][4:6] + ":" + fpl_items[5][6:]
 
         # 15. ROUTE WITH CRUISING SPEED AND LEVEL (비행 속도와 레벨, 경로)
         fpl_route_split = fpl_items[6].split(" ")
@@ -118,6 +118,21 @@ class FlightPlan:
 
         ret["cruising_speed"], ret["level"] = FPC.get_speed_and_level(fpl_speed_level)
 
+        ret["route"] = "N/A" # TODO
+
+        # 16. DESTINATION AERODROME AND ALTERNATIVES (도착 비행장과 대체 비행장)
+        fpl_dest = fpl_items[7].split(" ")
+        ret["destination"] = fpl_dest[0][0:4]
+        ret["destination_time"] = fpl_dest[0][4:6] + ":" + fpl_dest[0][6:]
+
+        ret["dest_alternatives"] = list()
+        for i in range(0, len(fpl_dest)):
+            if i == 0: continue
+            # ZZZZ일 경우 추가 명시됨을 알려줍니다.
+            ret["dest_alternatives"].append(("명시되지 않음 (추가 정보에 ALTN으로 명시)" if fpl_dest[i] == "ZZZZ" else fpl_dest[i]))
+
+        # 17. OTHER INFORMATIONS (추가 정보)
+        ret["others"] = fpl_items[8]
         return ret
 
 if __name__ == "__main__":
