@@ -114,11 +114,11 @@ class FlightPlan:
 
         # 15. ROUTE WITH CRUISING SPEED AND LEVEL (비행 속도와 레벨, 경로)
         fpl_route_split = fpl_items[6].split(" ")
-        fpl_speed_level, fpl_route = fpl_route_split[0], fpl_route_split[1]
+        fpl_speed_level, fpl_route = fpl_route_split[0], fpl_route_split[1:]
 
         ret["cruising_speed"], ret["level"] = FPC.get_speed_and_level(fpl_speed_level)
 
-        ret["route"] = "N/A" # TODO
+        ret["route"] = fpl_route # TODO
 
         # 16. DESTINATION AERODROME AND ALTERNATIVES (도착 비행장과 대체 비행장)
         fpl_dest = fpl_items[7].split(" ")
