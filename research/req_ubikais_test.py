@@ -1,34 +1,94 @@
+search = input("검색하려는 정보를 입력하세요 ARR/DEP : ")
+
 import requests
-Arr = 'http://ubikais.fois.go.kr/sysUbikais/biz/fpl/selectArr.fois?downloadYn=1&srchDate=2017-12-15&srchDatesh=20171215&srchAl=&srchFln=&srchDep=&srchArr=RKSI&dummy=175827665&cmd=get-records&limit=100&offset=0'
-response = requests.get(Arr)
-rep = response.json()
-#print(rep["records"][0]["amsOriginal"])
+import time
+now = time.localtime()
 
-print("status : ", rep["status"],"\n\n")
-for i in rep["records"]:
-    FltNum =  "편명 : " + i["fpId"]
-    RegNum = "\n등록번호 : " + ("Not Assigned" if i["acId"] == None else i["acId"])
-    AcType = "\n기종 : " + i["acType"]
-    Orig = "\n출발공항 : " + i["apIcao"]
-    ActDep = "\n출발시각 : " + i["staDate"] + " " + i["sta"]
-    Dest = "\n도착공항 : " + i["apArr"]
-    EstArr = "\n도착시간 : " + i["schDate"] + " " + ("None" if i["eta"] == None else i["eta"])
-    Ramp = "\n램프/램프인 : " + ("Not Assigned" if i["standArr"] == None else i["standArr"]) + " / " + ("None" if i["blockOnTime"] == None else i["blockOnTime"])
-    Stat = "\n현재상태 : " +  ("None" if i["arrStatus"] == None else i["arrStatus"])
-    PriKey = "\namsRecPk / flightPk : " + str(i["amsRecPk"]) + " / " + str(i["flightPk"])
-    FplHead = "\n\n[FPL]\n"
-    
-    aRP = {
-    'aRP' : i["amsRecPk"],
-    'dummy' : 'A182955307'
-    }
+schCon = {
+    'Year' : now.tm_year,
+    'Month' : now.tm_mon,
+    'Date' : now.tm_mday
+}
 
-    import requests
-    FPL = 'http://ubikais.fois.go.kr/sysUbikais/biz/fpl/selectViewFpl.fois?amsRecPk={aRP}&dummy={dummy}'
-    response = requests.get(FPL.format(**aRP))
-    if i["amsRecPk"] == None:
-        print("FPL이 없습니다!")
-    else:
-        FPLrep = response.json()
-        print(FPLrep["records"][0]["amsOriginal"])
-    print("-" * 70, end="\n\n")
+if search == "ARR":
+    URL = 'http://ubikais.fois.go.kr/sysUbikais/biz/fpl/selectArr.fois?downloadYn=1&srchDate={Year}-{Month}-{Date}&srchDatesh={Year}{Month}{Date}&srchAl=&srchFln=&srchDep=&srchArr=RKSI&dummy=175827665&cmd=get-records&limit=100&offset=0'
+    response = requests.get(URL.format(**schCon))
+    rep = response.json()
+
+    result = ''
+
+    print("status : ", rep["status"],"\n")
+    for i in rep["records"]:
+        result +=  "편명 : " + str(i["fpId"])
+        result += "\n등록번호 : " + str(("Not Assigned" if i["acId"] == None else i["acId"]))
+        result += "\n기종 : " + str(i["acType"])
+        result += "\n출발공항 : " + str(i["apIcao"])
+        result += "\n출발시각 : " + str(i["staDate"]) + " " + str(i["sta"])
+        result += "\n도착공항 : " + str(i["apArr"])
+        result += "\n도착시간 : " + str(i["schDate"]) + " " + str(("None" if i["eta"] == None else i["eta"]))
+        result += "\n램프/램프인 : " + str(("Not Assigned" if i["standArr"] == None else i["standArr"])) + " / " + str(("None" if i["blockOnTime"] == None else i["blockOnTime"]))
+        result += "\n현재상태 : " +  str(("None" if i["arrStatus"] == None else i["arrStatus"]))
+        result += "\namsRecPk / flightPk : " + str(i["amsRecPk"]) + " / " + str(i["flightPk"])
+        result += "\n\n[FPL]\n\n"
+
+        aRP = {
+        'aRP' : i["amsRecPk"],
+        'dummy' : 'A182955307'
+        }
+
+        import requests
+        FPL = 'http://ubikais.fois.go.kr/sysUbikais/biz/fpl/selectViewFpl.fois?amsRecPk={aRP}&dummy={dummy}'
+        response = requests.get(FPL.format(**aRP))
+
+        if i["amsRecPk"] == None:
+            FPLrep = "FPL이 없습니다!"
+        else:
+            FPL = response.json()
+            FPLrep = FPL["records"][0]["amsOriginal"]
+
+        result += str(FPLrep)
+        result += "\n" + "-" * 70 + "\n"
+
+    print(result)
+elif search == "DEP":
+    URL = 'http://ubikais.fois.go.kr/sysUbikais/biz/fpl/selectDep.fois?downloadYn=1&srchDate={Year}-{Month}-{Date}&srchDatesh={Year}{Month}{Date}&srchAl=&srchFln=&srchDep=RKSI&srchArr=&dummy=203004277&cmd=get-records&limit=100&offset=0'
+    response = requests.get(URL.format(**schCon))
+    rep = response.json()
+
+    result = ''
+
+    print("status : ", rep["status"],"\n")
+    for i in rep["records"]:
+        result +=  "편명 : " + str(i["fpId"])
+        result += "\n등록번호 : " + str(("Not Assigned" if i["acId"] == None else i["acId"]))
+        result += "\n기종 : " + str(i["acType"])
+        result += "\n출발공항 : " + str(i["apIcao"])
+        result += "\n출발시각 : " + str(i["staDate"]) + " " + str(i["sta"])
+        result += "\n도착공항 : " + str(i["apArr"])
+        result += "\n도착시간 : " + str(i["schDate"]) + " " + str(("None" if i["eta"] == None else i["eta"]))
+        result += "\n램프/램프아웃 : " + str(("Not Assigned" if i["standDep"] == None else i["standDep"])) + " / " + str(("None" if i["blockOffTime"] == None else i["blockOffTime"]))
+        result += "\n현재상태 : " +  str(("None" if i["depStatus"] == None else i["depStatus"]))
+        result += "\namsRecPk / flightPk : " + str(i["amsRecPk"]) + " / " + str(i["flightPk"])
+        result += "\n\n[FPL]\n\n"
+
+        aRP = {
+        'aRP' : i["amsRecPk"],
+        'dummy' : 'A182955307'
+        }
+
+        import requests
+        FPL = 'http://ubikais.fois.go.kr/sysUbikais/biz/fpl/selectViewFpl.fois?amsRecPk={aRP}&dummy={dummy}'
+        response = requests.get(FPL.format(**aRP))
+
+        if i["amsRecPk"] == None:
+            FPLrep = "FPL이 없습니다!"
+        else:
+            FPL = response.json()
+            FPLrep = FPL["records"][0]["amsOriginal"]
+
+        result += str(FPLrep)
+        result += "\n" + "-" * 70 + "\n"
+
+    print(result)
+else:
+    print("\n ARR과 DEP 중 하나를 입력하세요.")
